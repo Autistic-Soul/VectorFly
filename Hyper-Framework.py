@@ -11,7 +11,7 @@ Load the dataset as a pandas.DataFrame before predicting:
 >>> iris = pd.read_csv( filepath_or_buffer, names = [ "sepal-length", "sepal-width", "petal-length", "petal-width" ] )
 
 And then use the fuctions in it:
->>> y_Predicted = _HYPER_PREDICT(iris)
+>>> y_Predicted = hyper._HYPER_PREDICT(iris)
 
 Enjoy Yourself!
 """
