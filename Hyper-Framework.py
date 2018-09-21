@@ -7,7 +7,7 @@ Copy this file to the filefolder and then use this command:
 >>> hyper = __import__("Hyper-Framework")
 
 Then, you can use this framework like this:
->>> y_prediction = hyper._CSV_PREDICT( iris_path, _Names = [ "sepal-length", "sepal-width", "petal-length", "petal-width", "class" ] )
+>>> y_prediction[0] = hyper._CSV_PREDICT( iris_path, _Names = [ "sepal-length", "sepal-width", "petal-length", "petal-width", "class" ] )
 
 Enjoy Yourself!
 """
@@ -265,7 +265,7 @@ def _USING_GRIDDED_PARA(Model, _Type = "classification", _Grid_Result = {}): # F
 
 
 
-def _HYPER_PREDICT( _Data, _Plot = False, _CVType = "KFold", n_splits = N_SPLITS, random_state = RANDOM_STATE, scoring = SCORING, test_size = TEST_SIZE, _Type = "classification" ):
+def _HYPER_PREDICT( _Data, _Plot = False, _Print = False, _Scale = False, _CVType = "KFold", n_splits = N_SPLITS, random_state = RANDOM_STATE, scoring = SCORING, test_size = TEST_SIZE, _Type = "classification" ):
     _X_Train, _X_Test, _y_Train, _y_Test = _AUTO_SPLITTING_DATASET( _Data, test_size = test_size, random_state = random_state )
     _Ordinary_Models = _GET_ORDINARY_MODEL_DICT(_Type = _Type)
     _Ensemble_Models = _GET_ORDINARY_MODEL_DICT(_Type = _Type)
@@ -273,18 +273,29 @@ def _HYPER_PREDICT( _Data, _Plot = False, _CVType = "KFold", n_splits = N_SPLITS
     _Ensemble_Algorithms_Comparison_Results, _Best_Ensemble_Model = _ALGO_CMP( Models = _Ensemble_Models, X = _X_Train, y = _y_Train, _Plot = _Plot )
     _y_Ordinary_Pred, _Metrics_Ordinary = _MODEL_RUN( Model = _Best_Ordinary_Model, X_TRAIN = _X_Train, X_TEST = _X_Test, y_TRAIN = _y_Train, y_TEST = _y_Test, _Type = _Type )
     _y_Ensemble_Pred, _Metrics_Ensemble = _MODEL_RUN( Model = _Best_Ensemble_Model, X_TRAIN = _X_Train, X_TEST = _X_Test, y_TRAIN = _y_Train, y_TEST = _y_Test, _Type = _Type )
+
     if _Type == "classification":
-        return _Best_Ordinary_Model, ( _y_Ordinary_Pred if ( _Metrics_Ordinary["ACCURACY_SCORE"] >= _Metrics_Ensemble["ACCURACY_SCORE"] ) else _y_Ensemble_Pred )
+        ( _Best_Model, _Best_Metrics ) = ( _Best_Ordinary_Model, _Metrics_Ordinary ) if ( _Metrics_Ordinary["ACCURACY_SCORE"] >= _Metrics_Ensemble["ACCURACY_SCORE"] ) else ( _Best_Ensemble_Model, _Metrics_Ensemble )
     elif _Type == "regression":
-        return _Best_Ensemble_Model, ( _y_Ordinary_Pred if ( ( _Metrics_Ordinary["MSE"] > _Metrics_Ensemble["MSE"] ) or ( ( _Metrics_Ordinary["MSE"] == _Metrics_Ensemble["MSE"] ) and ( _Metrics_Ordinary["MAE"] >= _Metrics_Ensemble["MAE"] ) ) ) else _y_Ensemble_Pred )
+        ( _Best_Model, _Best_Metrics ) = ( _Best_Ordinary_Model, _Metrics_Ordinary ) if ( ( _Metrics_Ordinary["MSE"] > _Metrics_Ensemble["MSE"] ) or ( ( _Metrics_Ordinary["MSE"] == _Metrics_Ensemble["MSE"] ) and ( _Metrics_Ordinary["MAE"] >= _Metrics_Ensemble["MAE"] ) ) ) else ( _Best_Ensemble_Model, _Metrics_Ensemble )
     else:
         raise Exception("")
 
+    _Running_Result = _MODEL_RUN( _Best_Model, _X_Train, _X_Test, _y_Train, _y_Test, _Scale = _Scale )
+
+    if _Print:
+        print( "The Best Model:", _Best_Model, sep = "\n" )
+        print("Prediction Result:")
+        for i in range(len(_Running_Result[0])):
+            print(_Running_Result[0][i])
+
+    return _Running_Result
 
 
-def _CSV_PREDICT( _Filepath, _Names = None, _Plot = False, _CVType = "KFold", n_splits = N_SPLITS, random_state = RANDOM_STATE, scoring = SCORING, test_size = TEST_SIZE, _Type = "classification" ):
+
+def _CSV_PREDICT( _Filepath, _Names = None, _Plot = False, _Print = False, _CVType = "KFold", n_splits = N_SPLITS, random_state = RANDOM_STATE, scoring = SCORING, test_size = TEST_SIZE, _Type = "classification" ):
     _Data = pd.read_csv( _Filepath, names = _Names ) if _Names != None else pd.read_csv(_Filepath)
-    return _HYPER_PREDICT( _Data = _Data, _Plot = _Plot, _CVType = _CVType, n_splits = n_splits, random_state = random_state, scoring = scoring, test_size = test_size, _Type = _Type )
+    return _HYPER_PREDICT( _Data = _Data, _Plot = _Plot, _Print = _Print, _CVType = _CVType, n_splits = n_splits, random_state = random_state, scoring = scoring, test_size = test_size, _Type = _Type )
 
 
 
