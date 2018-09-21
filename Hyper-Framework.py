@@ -7,7 +7,7 @@ Copy this file to the filefolder and then use this command:
 >>> hyper = __import__("Hyper-Framework")
 
 Then, you can use this framework like this:
->>> y_prediction[0] = hyper._CSV_PREDICT( iris_path, _Names = [ "sepal-length", "sepal-width", "petal-length", "petal-width", "class" ] )
+>>> y_prediction = hyper._CSV_PREDICT( iris_path, _Names = [ "sepal-length", "sepal-width", "petal-length", "petal-width", "class" ] )[0]
 
 Enjoy Yourself!
 """
