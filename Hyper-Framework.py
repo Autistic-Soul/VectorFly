@@ -6,12 +6,8 @@ Just import this framework like this:
 Copy this file to the filefolder and then use this command:
 >>> hyper = __import__("Hyper-Framework")
 
-Load the dataset as a pandas.DataFrame before predicting:
->>> import pandas as pd
->>> iris = pd.read_csv( filepath_or_buffer, names = [ "sepal-length", "sepal-width", "petal-length", "petal-width" ] )
-
-And then use the fuctions in it:
->>> y_Predicted = hyper._HYPER_PREDICT(iris)
+Then, you can use this framework like this:
+>>> y_prediction = hyper._CSV_PREDICT( iris_path, _Names = [ "sepal-length", "sepal-width", "petal-length", "petal-width", "class" ] )
 
 Enjoy Yourself!
 """
@@ -278,11 +274,17 @@ def _HYPER_PREDICT( _Data, _Plot = False, _CVType = "KFold", n_splits = N_SPLITS
     _y_Ordinary_Pred, _Metrics_Ordinary = _MODEL_RUN( Model = _Best_Ordinary_Model, X_TRAIN = _X_Train, X_TEST = _X_Test, y_TRAIN = _y_Train, y_TEST = _y_Test, _Type = _Type )
     _y_Ensemble_Pred, _Metrics_Ensemble = _MODEL_RUN( Model = _Best_Ensemble_Model, X_TRAIN = _X_Train, X_TEST = _X_Test, y_TRAIN = _y_Train, y_TEST = _y_Test, _Type = _Type )
     if _Type == "classification":
-        return ( _y_Ordinary_Pred if ( _Metrics_Ordinary["ACCURACY_SCORE"] >= _Metrics_Ensemble["ACCURACY_SCORE"] ) else _y_Ensemble_Pred )
+        return _Best_Ordinary_Model, ( _y_Ordinary_Pred if ( _Metrics_Ordinary["ACCURACY_SCORE"] >= _Metrics_Ensemble["ACCURACY_SCORE"] ) else _y_Ensemble_Pred )
     elif _Type == "regression":
-        return ( _y_Ordinary_Pred if ( ( _Metrics_Ordinary["MSE"] > _Metrics_Ensemble["MSE"] ) or ( ( _Metrics_Ordinary["MSE"] == _Metrics_Ensemble["MSE"] ) and ( _Metrics_Ordinary["MAE"] >= _Metrics_Ensemble["MAE"] ) ) ) else _y_Ensemble_Pred )
+        return _Best_Ensemble_Model, ( _y_Ordinary_Pred if ( ( _Metrics_Ordinary["MSE"] > _Metrics_Ensemble["MSE"] ) or ( ( _Metrics_Ordinary["MSE"] == _Metrics_Ensemble["MSE"] ) and ( _Metrics_Ordinary["MAE"] >= _Metrics_Ensemble["MAE"] ) ) ) else _y_Ensemble_Pred )
     else:
         raise Exception("")
+
+
+
+def _CSV_PREDICT( _Filepath, _Names = None, _Plot = False, _CVType = "KFold", n_splits = N_SPLITS, random_state = RANDOM_STATE, scoring = SCORING, test_size = TEST_SIZE, _Type = "classification" ):
+    _Data = pd.read_csv( _Filepath, names = _Names ) if _Names != None else pd.read_csv(_Filepath)
+    return _HYPER_PREDICT( _Data = _Data, _Plot = _Plot, _CVType = _CVType, n_splits = n_splits, random_state = random_state, scoring = scoring, test_size = test_size, _Type = _Type )
 
 
 
