@@ -40,7 +40,7 @@ TEST_SIZE = 0.2
 SCORING = "accuracy"
 SHUFFLE = False
 
-MODEL_CAN_BE_GRIDDED = [
+MODELS_CAN_BE_GRIDDED = [
     KNeighborsClassifier, KNeighborsRegressor, SVC, SVR, \
     ExtraTreeClassifier, ExtraTreeRegressor, DecisionTreeClassifier, DecisionTreeRegressor, \
     ExtraTreesClassifier, ExtraTreesRegressor, RandomForestClassifier, RandomForestRegressor, \
@@ -90,6 +90,39 @@ def GET_ENSEMBLE_MODELS(prediction_type = None):
     else:
         raise Exception()
 
+def GET_ALLKINDS_MODELS(prediction_type = None):
+    if prediction_type == "C":
+        return {
+            "LR" : LogisticRegression(),
+            "LDA" : LinearDiscriminantAnalysis(),
+            "GNB" : GaussianNB(),
+            "KNC" : KNeighborsClassifier(),
+            "SVC" : SVC(),
+            "ETC" : ExtraTreeClassifier(),
+            "DTC" : DecisionTreeClassifier(),
+            "ETC" : ExtraTreesClassifier(),
+            "RFC" : RandomForestClassifier(),
+            "ABC" : AdaBoostClassifier(),
+            "GBC" : GradientBoostingClassifier()
+            }
+    elif prediction_type == "R":
+        return {
+            "LR" : LinearRegression(),
+            "RIDGE" : Ridge(),
+            "LASSO" : Lasso(),
+            "EN" : ElasticNet(),
+            "KNR" : KNeighborsRegressor(),
+            "SVR" : SVR(),
+            "ETR" : ExtraTreeRegressor(),
+            "DTR" : DecisionTreeRegressor(),
+            "ETR" : ExtraTreesRegressor(),
+            "RFR" : RandomForestRegressor(),
+            "ABR" : AdaBoostRegressor(),
+            "GBR" : GradientBoostingRegressor()
+            }
+    else:
+        raise Exception()
+
 def SPLIT_DATA( data_tobe_splitted, test_size = TEST_SIZE, random_state = RANDOM_STATE ):
     return model_selection.train_test_split(
         data_tobe_splitted.values[ : , : (-1) ],
@@ -125,7 +158,7 @@ def MODEL_CV( cv_type = "KFold", n_splits = N_SPLITS, random_state = RANDOM_STAT
 def ALGO_CMP( models = None, X_TRAIN = None, y_TRAIN = None, prediction_type = None, scale = False, scaler_type = "StandardScaler", cv_type = "KFold", n_splits = N_SPLITS, random_state = RANDOM_STATE, test_size = TEST_SIZE, scoring = SCORING, shuffle = SHUFFLE ):
 
     if models == None:
-        models = GET_ORDINARY_MODELS(prediction_type = "C")
+        models = GET_ALLKINDS_MODELS(prediction_type = "C")
 
     if scale:
         NEW_SCALER(scaler_type = scaler_type).fit_transform(X = X_TRAIN)
@@ -153,7 +186,7 @@ class ALGORITHM_COMPARISON(object):
     def __init__( self, models = None, X_TRAIN = None, y_TRAIN = None, prediction_type = None, scale = False, scaler_type = "StandardScaler", cv_type = "KFold", n_splits = N_SPLITS, random_state = RANDOM_STATE, test_size = TEST_SIZE, scoring = SCORING, shuffle = SHUFFLE ):
 
         if models == None:
-            models = GET_ORDINARY_MODELS(prediction_type = prediction_type)
+            models = GET_ALLKINDS_MODELS(prediction_type = prediction_type)
 
         if scale:
             NEW_SCALER(scaler_type = scaler_type).fit_transform(X = X_TRAIN)
@@ -167,21 +200,30 @@ class ALGORITHM_COMPARISON(object):
             if results[i][1].mean() > best[1].mean():
                 best = results[i]
 
-        self.best_model = best[0]
-        self.best_result = best[1]
-        self.all_keys = models.keys()
-        self.all_results = results
+        self.__best_model = best[0]
+        self.__best_result = best[1]
+        self.__all_keys = models.keys()
+        self.__all_results = results
 
         return
 
     def PRINT_RESULTS(self):
-        for each_result in self.all_results:
+        for each_result in self.__all_results:
             print( "Algorithm: %s,\nMEAN: %f, STD: %f" % ( type(each_result[0]), each_result[1].std(), each_result[1].mean() ) )
+        print()
+        return
 
     def PLOT_FIGURE( self, figure_title = "Algorithm_Comparison" ):
         plt.title(s = figure_title)
-        plt.boxplot( x = [ each_result[1] for each_result in self.all_results ], labels = self.all_keys )
+        plt.boxplot( x = [ each_result[1] for each_result in self.__all_results ], labels = self.__all_keys )
         plt.show()
+        return
+
+    def BEST_MODEL(self):
+        return self.__best_model
+
+    def BEST_RESULT(self):
+        return self.__best_result
 
 def MODEL_PREDICT( model = None, X_TRAIN = None, X_TEST = None, y_TRAIN = None, y_TEST = None, prediction_type = None, scale = False, scaler_type = "StandardScaler" ):
 
@@ -239,7 +281,7 @@ class MODEL_PREDICTION(object):
     def y_PRED(self):
         return self.__y_PRED
 
-    def report(self):
+    def REPORT(self):
         return self.__prediction_report
 
 def GET_GRID_PARA(model = None):
@@ -276,6 +318,7 @@ def BEST_PARA_SEARCH( model = None, param_grid = None, X_TRAIN = None, y_TRAIN =
     print( "Best Parameter: %s" % result.best_params_ )
     for each_mean_test_score, each_std_test_score, each_params in cv_results:
         print( "%f (%f) with %r" % ( each_mean_test_score, each_std_test_score, each_params ) )
+    print()
 
     return result.best_params_
 
@@ -315,20 +358,65 @@ def MODEL_WITH_BESTPARA( model = None, param = None ):
     else:
         return model
 
-class HYPER_PREDICTION:
-    def __init__(self):
+class HYPER_PREDICTION(object):
+
+    def __init__( self, prediction_type = None, X_TRAIN = None, X_TEST = None, y_TRAIN = None, y_TEST = None, models = None, n_splits = N_SPLITS, random_state = RANDOM_STATE, test_size = TEST_SIZE, scoring = SCORING, shuffle = SHUFFLE, cv_type = "KFold", scale = False, scaler_type = "StandardScaler" ):
+
+        if models == None:
+            models = GET_ALLKINDS_MODELS(prediction_type = prediction_type)
+        if scale:
+            models = MODEL_SCALING( models = models, scaler_type = scaler_type )
+
+        self.__X_TRAIN = X_TRAIN
+        self.__X_TEST = X_TEST
+        self.__y_TRAIN = y_TRAIN
+        self.__y_TEST = y_TEST
+
+        self.__prediction_type = prediction_type
+
+        for i in range(len(models)):
+            if models[i] in MODELS_CAN_BE_GRIDDED:
+                models[i] = MODEL_WITH_BESTPARA( model = models[i], param = BEST_PARA_SEARCH( model = models[i], param_grid = GET_GRID_PARA(model = models[i]), X_TRAIN = X_TRAIN, y_TRAIN = y_TRAIN, scale = scale, scaler_type = scaler_type, cv_type = cv_type, n_splits = n_splits, random_state = random_state, test_size = test_size, scoring = scoring, shuffle = shuffle ) )
+
+        self.__models = models
+
+        self.__models_comparison = ALGORITHM_COMPARISON( models = self.__models, X_TRAIN = self.__X_TRAIN, y_TRAIN = self.__y_TRAIN, prediction_type = prediction_type, scale = scale, scaler_type = scaler_type, cv_type = cv_type, n_splits = n_splits, random_state = random_state, test_size = test_size, scoring = scoring, shuffle = shuffle )
+        self.__models_comparison.PRINT_RESULTS()
+        self.__models_comparison.PLOT_FIGURE()
+
+        self.__Algorithm = self.__models_comparison.BEST_MODEL()
+
+        self.__Prediction = MODEL_PREDICTION( model = self.__Algorithm, X_TRAIN = self.__X_TRAIN, X_TEST = self.__X_TEST, y_TRAIN = self.__y_TRAIN, y_TEST = self.__y_TEST, prediction_type = prediction_type, scale = scale, scaler_type = scaler_type )
+
+        self.__y_PRED = self.__Prediction.y_PRED()
+        self.__Prediction_Report = self.__Prediction.REPORT()
+
         return
 
+    def ALGORITHM(self):
+        return self.__Algorithm
 
+    def y_PRED(self):
+        return self.__y_PRED
 
-# -*- Testing Part -*-
-"""
-iris = pd.read_csv( "C:\\iris.csv", names = [ "sepal-length", "sepal-width", "petal-length", "petal-width", "class" ] )
-XTrain, XTest, yTrain, yTest = SPLIT_DATA( iris, test_size = TEST_SIZE, random_state = RANDOM_STATE )
-model_set = GET_ORDINARY_MODELS(prediction_type = "C")
-best_algo, algorithm_comparison_result = ALGO_CMP( models = model_set, X_TRAIN = XTrain, y_TRAIN = yTrain, scale = False )
-best_para_4SVC = BEST_PARA_SEARCH( model = SVC(), X_TRAIN = XTrain, y_TRAIN = yTrain, prediction_type = "C" )
-SVC_model = MODEL_WITH_BESTPARA( model = SVC(), param = best_para_4SVC )
-algo_comparison = ALGORITHM_COMPARISON( models = model_set, X_TRAIN = XTrain, y_TRAIN = yTrain, prediction_type = "C" )
-best_algo = algo_comparison.best_model
-"""
+    def REPORT( self, Print_Report = True ):
+
+        if Print_Report:
+
+            if self.__prediction_type == "C":
+                print("CLASSIFICATION_REPORT:")
+                print(self.__Prediction_Report.classification_report)
+                print()
+                print("ACCURACY_SCORE:", end = " ")
+                print(self.__Prediction_Report.accuracy_score)
+                print()
+                print("CONFUSION_MATRIX:")
+                print(self.__Prediction_Report.confusion_matrix)
+                print()
+
+            elif self.__prediction_type == "R":
+                print("MAE:", self.__Prediction_Report.L1_MAE)
+                print("MSE:", self.__Prediction_Report.L2_MSE)
+                print()
+
+        return self.__Prediction_Report
