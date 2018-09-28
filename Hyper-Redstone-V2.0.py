@@ -75,17 +75,17 @@ def GET_ORDINARY_MODELS(prediction_type = None):
 def GET_ENSEMBLE_MODELS(prediction_type = None):
     if prediction_type == "C":
         return {
-            "ETC" : ExtraTreesClassifier(),
-            "RFC" : RandomForestClassifier(),
-            "ABC" : AdaBoostClassifier(),
-            "GBC" : GradientBoostingClassifier()
+            "ETC_Ensemble" : ExtraTreesClassifier(),
+            "RFC_Ensemble" : RandomForestClassifier(),
+            "ABC_Ensemble" : AdaBoostClassifier(),
+            "GBC_Ensemble" : GradientBoostingClassifier()
             }
     elif prediction_type == "R":
         return {
-            "ETR" : ExtraTreesRegressor(),
-            "RFR" : RandomForestRegressor(),
-            "ABR" : AdaBoostRegressor(),
-            "GBR" : GradientBoostingRegressor()
+            "ETR_Ensemble" : ExtraTreesRegressor(),
+            "RFR_Ensemble" : RandomForestRegressor(),
+            "ABR_Ensemble" : AdaBoostRegressor(),
+            "GBR_Ensemble" : GradientBoostingRegressor()
         }
     else:
         raise Exception()
@@ -100,10 +100,10 @@ def GET_ALLKINDS_MODELS(prediction_type = None):
             "SVC" : SVC(),
             "ETC" : ExtraTreeClassifier(),
             "DTC" : DecisionTreeClassifier(),
-            "ETC" : ExtraTreesClassifier(),
-            "RFC" : RandomForestClassifier(),
-            "ABC" : AdaBoostClassifier(),
-            "GBC" : GradientBoostingClassifier()
+            "ETC_Ensemble" : ExtraTreesClassifier(),
+            "RFC_Ensemble" : RandomForestClassifier(),
+            "ABC_Ensemble" : AdaBoostClassifier(),
+            "GBC_Ensemble" : GradientBoostingClassifier()
             }
     elif prediction_type == "R":
         return {
@@ -115,10 +115,10 @@ def GET_ALLKINDS_MODELS(prediction_type = None):
             "SVR" : SVR(),
             "ETR" : ExtraTreeRegressor(),
             "DTR" : DecisionTreeRegressor(),
-            "ETR" : ExtraTreesRegressor(),
-            "RFR" : RandomForestRegressor(),
-            "ABR" : AdaBoostRegressor(),
-            "GBR" : GradientBoostingRegressor()
+            "ETR_Ensemble" : ExtraTreesRegressor(),
+            "RFR_Ensemble" : RandomForestRegressor(),
+            "ABR_Ensemble" : AdaBoostRegressor(),
+            "GBR_Ensemble" : GradientBoostingRegressor()
             }
     else:
         raise Exception()
@@ -253,11 +253,11 @@ def MODEL_PREDICT( model = None, X_TRAIN = None, X_TEST = None, y_TRAIN = None, 
 class metrics_results(object):
     def __init__( self, prediction_type = None, y_TRUE = None, y_PRED = None ):
         if prediction_type == "C":
-            self.accuracy_score = metrics.accuracy_score( y_true = y_TRUE, y_pred = y_PRED ),
-            self.confusion_matrix = metrics.confusion_matrix( y_true = y_TRUE, y_pred = y_PRED ),
+            self.accuracy_score = metrics.accuracy_score( y_true = y_TRUE, y_pred = y_PRED )
+            self.confusion_matrix = metrics.confusion_matrix( y_true = y_TRUE, y_pred = y_PRED )
             self.classification_report = metrics.classification_report( y_true = y_TRUE, y_pred = y_PRED )
         elif prediction_type == "R":
-            self.L1_MAE = metrics.mean_absolute_error( y_true = y_TRUE, y_pred = y_PRED ),
+            self.L1_MAE = metrics.mean_absolute_error( y_true = y_TRUE, y_pred = y_PRED )
             self.L2_MSE = metrics.mean_squared_error( y_true = y_TRUE, y_pred = y_PRED )
         else:
             raise Exception()
@@ -374,9 +374,9 @@ class HYPER_PREDICTION(object):
 
         self.__prediction_type = prediction_type
 
-        for i in range(len(models)):
-            if models[i] in MODELS_CAN_BE_GRIDDED:
-                models[i] = MODEL_WITH_BESTPARA( model = models[i], param = BEST_PARA_SEARCH( model = models[i], param_grid = GET_GRID_PARA(model = models[i]), X_TRAIN = X_TRAIN, y_TRAIN = y_TRAIN, scale = scale, scaler_type = scaler_type, cv_type = cv_type, n_splits = n_splits, random_state = random_state, test_size = test_size, scoring = scoring, shuffle = shuffle ) )
+        for key in models:
+            if type(models[key]) in MODELS_CAN_BE_GRIDDED:
+                models[key] = MODEL_WITH_BESTPARA( model = models[key], param = BEST_PARA_SEARCH( model = models[key], param_grid = GET_GRID_PARA(model = models[key]), X_TRAIN = X_TRAIN, y_TRAIN = y_TRAIN, scale = scale, scaler_type = scaler_type, cv_type = cv_type, n_splits = n_splits, random_state = random_state, test_size = test_size, scoring = scoring, shuffle = shuffle ) )
 
         self.__models = models
 
@@ -420,3 +420,17 @@ class HYPER_PREDICTION(object):
                 print()
 
         return self.__Prediction_Report
+
+    def predict(self, X):
+        return self.__Algorithm.predict(X)
+
+iris = pd.read_csv( "C:\\iris.csv", names = [ "sepal-length", "sepal-width", "petal-length", "petal-width" ] )
+XTrain, XTest, yTrain, yTest = SPLIT_DATA(iris)
+classification = HYPER_PREDICTION(
+    prediction_type = "C",
+    X_TRAIN = XTrain,
+    X_TEST = XTest,
+    y_TRAIN = yTrain,
+    y_TEST = yTest,
+    scale = True
+    )
