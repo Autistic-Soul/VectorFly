@@ -399,27 +399,24 @@ class HYPER_PREDICTION(object):
     def y_PRED(self):
         return self.__y_PRED
 
-    def REPORT( self, Print_Report = True ):
-
-        if Print_Report:
-
-            if self.__prediction_type == "C":
-                print("CLASSIFICATION_REPORT:")
-                print(self.__Prediction_Report.classification_report)
-                print()
-                print("ACCURACY_SCORE:", end = " ")
-                print(self.__Prediction_Report.accuracy_score)
-                print()
-                print("CONFUSION_MATRIX:")
-                print(self.__Prediction_Report.confusion_matrix)
-                print()
-
-            elif self.__prediction_type == "R":
-                print("MAE:", self.__Prediction_Report.L1_MAE)
-                print("MSE:", self.__Prediction_Report.L2_MSE)
-                print()
-
+    def REPORT(self):
         return self.__Prediction_Report
+
+    def PRINT_REPORT(self):
+        if self.__prediction_type == "C":
+            print("CLASSIFICATION_REPORT:")
+            print(self.__Prediction_Report.classification_report)
+            print()
+            print("ACCURACY_SCORE:", end = " ")
+            print(self.__Prediction_Report.accuracy_score)
+            print()
+            print("CONFUSION_MATRIX:")
+            print(self.__Prediction_Report.confusion_matrix)
+            print()
+        elif self.__prediction_type == "R":
+            print("MAE:", self.__Prediction_Report.L1_MAE)
+            print("MSE:", self.__Prediction_Report.L2_MSE)
+            print()
 
     def predict(self, X):
         return self.__Algorithm.predict(X)
