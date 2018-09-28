@@ -365,10 +365,10 @@ class HYPER_PREDICTION(object):
         if models == None:
             models = GET_ALLKINDS_MODELS(prediction_type = prediction_type)
 
-"""
+        """
         if scale:
             models = MODEL_SCALING( models = models, scaler_type = scaler_type )
-"""
+        """
 
         self.__X_TRAIN = X_TRAIN
         self.__X_TEST = X_TEST
