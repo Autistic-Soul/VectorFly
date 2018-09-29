@@ -1,8 +1,12 @@
 #!/usr/bin/env Python
 # -*- coding: utf-8 -*-
 
-import numpy as np, scipy as sp, pandas as pd
-import matplotlib; import matplotlib.pyplot as plt; matplotlib.style.use("default")
+import numpy as np
+import scipy as sp
+import pandas as pd
+import matplotlib
+import matplotlib.pyplot as plt
+matplotlib.style.use("seaborn")
 
 from sklearn import model_selection, \
                     preprocessing, \
@@ -41,10 +45,22 @@ SCORING = "accuracy"
 SHUFFLE = False
 
 MODELS_CAN_BE_GRIDDED = [
-    KNeighborsClassifier, KNeighborsRegressor, SVC, SVR, \
-    ExtraTreeClassifier, ExtraTreeRegressor, DecisionTreeClassifier, DecisionTreeRegressor, \
-    ExtraTreesClassifier, ExtraTreesRegressor, RandomForestClassifier, RandomForestRegressor, \
-    AdaBoostClassifier, AdaBoostRegressor, GradientBoostingClassifier, GradientBoostingRegressor
+    KNeighborsClassifier,
+    KNeighborsRegressor,
+    SVC,
+    SVR,
+    ExtraTreeClassifier,
+    ExtraTreeRegressor,
+    DecisionTreeClassifier,
+    DecisionTreeRegressor,
+    ExtraTreesClassifier,
+    ExtraTreesRegressor,
+    RandomForestClassifier,
+    RandomForestRegressor,
+    AdaBoostClassifier,
+    AdaBoostRegressor,
+    GradientBoostingClassifier,
+    GradientBoostingRegressor
     ]
 
 def GET_ORDINARY_MODELS(prediction_type = None):
@@ -143,7 +159,7 @@ def NEW_SCALER(scaler_type = "StandardScaler"):
 
 def MODEL_SCALING( models, scaler_type = "StandardScaler" ):
     scaler = NEW_SCALER(scaler_type = scaler_type)
-    return { key : pipeline.Pipeline(steps = [ ("Scaler", scaler), (key, models[key]) ]) for key in models }
+    return { key : pipeline.Pipeline([ ("Scaler", scaler), (key, models[key]) ]) for key in models }
 
 def MODEL_CV( cv_type = "KFold", n_splits = N_SPLITS, random_state = RANDOM_STATE, test_size = TEST_SIZE, scoring = SCORING, shuffle = SHUFFLE ):
     if cv_type == "KFold":
@@ -209,7 +225,12 @@ class ALGORITHM_COMPARISON(object):
 
     def PRINT_RESULTS(self):
         for each_result in self.__all_results:
-            print( "Algorithm: %s,\nMEAN: %f, STD: %f" % ( type(each_result[0]), each_result[1].std(), each_result[1].mean() ) )
+            model_type_name = type(each_result[0])
+            if model_type_name == pipeline.Pipeline:
+                print( "Pipelined", end = " " )
+                model_type_name = type(each_result[0].steps[-1][-1])
+            print( "Algorithm: %s" % model_type_name )
+            print( "MEAN: %f, STD: %f" % ( each_result[1].mean(), each_result[1].std() ) )
         print()
         return
 
@@ -285,7 +306,9 @@ class MODEL_PREDICTION(object):
         return self.__prediction_report
 
 def GET_GRID_PARA(model = None):
-    if type(model) in [ KNeighborsClassifier, KNeighborsRegressor ]:
+    if type(model) == pipeline.Pipeline:
+        return GET_GRID_PARA(model = model.steps[-1][-1])
+    elif type(model) in [ KNeighborsClassifier, KNeighborsRegressor ]:
         return { "n_neighbors" : [ 1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21 ] }
     elif type(model) in [ SVC, SVR ]:
         return { "C" : [ 0.1, 0.3, 0.5, 0.7, 0.9, 1.1, 1.3, 1.5, 1.7, 1.9 ], "kernel" : [ "linear", "poly", "rbf", "sigmoid" ] }
@@ -300,8 +323,15 @@ def GET_GRID_PARA(model = None):
 
 def BEST_PARA_SEARCH( model = None, param_grid = None, X_TRAIN = None, y_TRAIN = None, scale = False, scaler_type = "StandardScaler", cv_type = "KFold", n_splits = N_SPLITS, random_state = RANDOM_STATE, test_size = TEST_SIZE, scoring = SCORING, shuffle = SHUFFLE ):
 
+    model_type_name = type(model)
+    if model_type_name == pipeline.Pipeline:
+        print( "Pipelined", end = " " )
+        model_type_name = type(model.steps[-1][-1])
+        model = model.steps[-1][-1]
+
     if param_grid == None:
         param_grid = GET_GRID_PARA(model = model)
+
     if scale:
         NEW_SCALER(scaler_type = scaler_type).fit_transform(X = X_TRAIN)
     cross_validator = MODEL_CV( cv_type = cv_type, n_splits = n_splits, random_state = random_state, test_size = test_size, scoring = scoring, shuffle = shuffle )
@@ -314,6 +344,7 @@ def BEST_PARA_SEARCH( model = None, param_grid = None, X_TRAIN = None, y_TRAIN =
                       result.cv_results_["params"]
                       )
 
+    print( "Algorithm: %s" % model_type_name )
     print( "Best Score: %s" % result.best_score_ )
     print( "Best Parameter: %s" % result.best_params_ )
     for each_mean_test_score, each_std_test_score, each_params in cv_results:
@@ -323,7 +354,14 @@ def BEST_PARA_SEARCH( model = None, param_grid = None, X_TRAIN = None, y_TRAIN =
     return result.best_params_
 
 def MODEL_WITH_BESTPARA( model = None, param = None ):
-    if type(model) == KNeighborsClassifier:
+    if type(model) == pipeline.Pipeline:
+        returning_model = MODEL_WITH_BESTPARA( model = model.steps[-1][-1], param = param )
+        stp = model.steps
+        stp[-1] = list(stp[-1])
+        stp[-1][-1] = returning_model
+        stp[-1] = tuple(stp[-1])
+        return pipeline.Pipeline(steps = stp)
+    elif type(model) == KNeighborsClassifier:
         return KNeighborsClassifier(n_neighbors = param["n_neighbors"])
     elif type(model) == KNeighborsRegressor:
         return KNeighborsRegressor(n_neighbors = param["n_neighbors"])
@@ -365,10 +403,11 @@ class HYPER_PREDICTION(object):
         if models == None:
             models = GET_ALLKINDS_MODELS(prediction_type = prediction_type)
 
-        """
         if scale:
-            models = MODEL_SCALING( models = models, scaler_type = scaler_type )
-        """
+            models = MODEL_SCALING( models, scaler_type = scaler_type )
+            scaler = NEW_SCALER(scaler_type = scaler_type).fit(X = X_TRAIN)
+            X_TRAIN = scaler.transform(X = X_TRAIN)
+            X_TEST = scaler.transform(X = X_TEST)
 
         self.__X_TRAIN = X_TRAIN
         self.__X_TEST = X_TEST
@@ -378,21 +417,29 @@ class HYPER_PREDICTION(object):
         self.__prediction_type = prediction_type
 
         for key in models:
-            if type(models[key]) in MODELS_CAN_BE_GRIDDED:
-                models[key] = MODEL_WITH_BESTPARA( model = models[key], param = BEST_PARA_SEARCH( model = models[key], param_grid = GET_GRID_PARA(model = models[key]), X_TRAIN = X_TRAIN, y_TRAIN = y_TRAIN, scale = scale, scaler_type = scaler_type, cv_type = cv_type, n_splits = n_splits, random_state = random_state, test_size = test_size, scoring = scoring, shuffle = shuffle ) )
+            if ( type(models[key]) in MODELS_CAN_BE_GRIDDED ) or ( ( type(models[key]) == pipeline.Pipeline ) and ( type(models[key].steps[-1][-1]) in MODELS_CAN_BE_GRIDDED ) ):
+                models[key] = MODEL_WITH_BESTPARA( model = models[key], param = BEST_PARA_SEARCH( model = models[key], param_grid = GET_GRID_PARA(model = models[key]), X_TRAIN = X_TRAIN, y_TRAIN = y_TRAIN, cv_type = cv_type, n_splits = n_splits, random_state = random_state, test_size = test_size, scoring = scoring, shuffle = shuffle ) )
 
         self.__models = models
 
-        self.__models_comparison = ALGORITHM_COMPARISON( models = self.__models, X_TRAIN = self.__X_TRAIN, y_TRAIN = self.__y_TRAIN, prediction_type = prediction_type, scale = scale, scaler_type = scaler_type, cv_type = cv_type, n_splits = n_splits, random_state = random_state, test_size = test_size, scoring = scoring, shuffle = shuffle )
+        self.__models_comparison = ALGORITHM_COMPARISON( models = self.__models, X_TRAIN = self.__X_TRAIN, y_TRAIN = self.__y_TRAIN, prediction_type = prediction_type, cv_type = cv_type, n_splits = n_splits, random_state = random_state, test_size = test_size, scoring = scoring, shuffle = shuffle )
         self.__models_comparison.PRINT_RESULTS()
         self.__models_comparison.PLOT_FIGURE()
 
         self.__Algorithm = self.__models_comparison.BEST_MODEL()
 
-        self.__Prediction = MODEL_PREDICTION( model = self.__Algorithm, X_TRAIN = self.__X_TRAIN, X_TEST = self.__X_TEST, y_TRAIN = self.__y_TRAIN, y_TEST = self.__y_TEST, prediction_type = prediction_type, scale = scale, scaler_type = scaler_type )
+        self.__Prediction = MODEL_PREDICTION( model = self.__Algorithm, X_TRAIN = self.__X_TRAIN, X_TEST = self.__X_TEST, y_TRAIN = self.__y_TRAIN, y_TEST = self.__y_TEST, prediction_type = prediction_type )
 
         self.__y_PRED = self.__Prediction.y_PRED()
         self.__Prediction_Report = self.__Prediction.REPORT()
+        self.__Prediction_Score = self.__models_comparison.BEST_RESULT()
+
+        if type(self.__Algorithm) == pipeline.Pipeline:
+            print( "Best (Pipelined) Algorithm:", self.__Algorithm.steps[-1][-1], sep = "\n" )
+        else:
+            print( "Best Algorithm:", self.__Algorithm, sep = "\n" )
+        print( " " * 3, "MEAN:", self.__Prediction_Score.mean() )
+        print( " " * 3, "STD:", self.__Prediction_Score.std() )
 
         return
 
@@ -404,6 +451,9 @@ class HYPER_PREDICTION(object):
 
     def REPORT(self):
         return self.__Prediction_Report
+
+    def SCORE(self):
+        return self.__Prediction_Score
 
     def PRINT_REPORT(self):
         if self.__prediction_type == "C":
@@ -421,12 +471,39 @@ class HYPER_PREDICTION(object):
             print("MSE:", self.__Prediction_Report.L2_MSE)
             print()
 
-    def predict(self, X):
+    def PREDICT( self, X ):
         return self.__Algorithm.predict(X)
 
-iris = pd.read_csv( "C:\\iris.csv", names = [ "sepal-length", "sepal-width", "petal-length", "petal-width" ] )
+    def DUMP_MODEL( self, filename = None ):
+        joblib.dump( value = self.__Algorithm, filename = filename )
+        return
+
+    def ALL_MODELS(self):
+        return self.__models
+
+
+
+
+iris_names = [ "sepal-length", "sepal-width", "petal-length", "petal-width" ]
+sonar_names = [ 'SONAR1', 'SONAR2', 'SONAR3', 'SONAR4', 'SONAR5', 'SONAR6', 'SONAR7', 'SONAR8', 'SONAR9', 'SONAR10', 'SONAR11', 'SONAR12', 'SONAR13', 'SONAR14', 'SONAR15', 'SONAR16', 'SONAR17', 'SONAR18', 'SONAR19', 'SONAR20', 'SONAR21', 'SONAR22', 'SONAR23', 'SONAR24', 'SONAR25', 'SONAR26', 'SONAR27', 'SONAR28', 'SONAR29', 'SONAR30', 'SONAR31', 'SONAR32', 'SONAR33', 'SONAR34', 'SONAR35', 'SONAR36', 'SONAR37', 'SONAR38', 'SONAR39', 'SONAR40', 'SONAR41', 'SONAR42', 'SONAR43', 'SONAR44', 'SONAR45', 'SONAR46', 'SONAR47', 'SONAR48', 'SONAR49', 'SONAR50', 'SONAR51', 'SONAR52', 'SONAR53', 'SONAR54', 'SONAR55', 'SONAR56', 'SONAR57', 'SONAR58', 'SONAR59', 'SONAR60', 'class' ]
+
+"""
+iris = pd.read_csv( "C:\\iris.csv", names = iris_names )
 XTrain, XTest, yTrain, yTest = SPLIT_DATA(iris)
-classification = HYPER_PREDICTION(
+iris_prediction = HYPER_PREDICTION(
+    prediction_type = "C",
+    X_TRAIN = XTrain,
+    X_TEST = XTest,
+    y_TRAIN = yTrain,
+    y_TEST = yTest,
+    scale = False
+    )
+iris_prediction.DUMP_MODEL("C:\\1.sav")
+"""
+
+sonar = pd.read_csv( "C:\\sonar.all-data.csv", names = sonar_names )
+XTrain, XTest, yTrain, yTest = SPLIT_DATA(sonar)
+sonar_prediction = HYPER_PREDICTION(
     prediction_type = "C",
     X_TRAIN = XTrain,
     X_TEST = XTest,
@@ -434,3 +511,4 @@ classification = HYPER_PREDICTION(
     y_TEST = yTest,
     scale = True
     )
+
