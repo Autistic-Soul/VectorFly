@@ -398,7 +398,7 @@ def MODEL_WITH_BESTPARA( model = None, param = None ):
 
 class HYPER_PREDICTION(object):
 
-    def __init__( self, prediction_type = None, X_TRAIN = None, X_TEST = None, y_TRAIN = None, y_TEST = None, models = None, n_splits = N_SPLITS, random_state = RANDOM_STATE, test_size = TEST_SIZE, scoring = SCORING, shuffle = SHUFFLE, cv_type = "KFold", scale = False, scaler_type = "StandardScaler" ):
+    def __init__( self, prediction_type = None, X_TRAIN = None, X_TEST = None, y_TRAIN = None, y_TEST = None, models = None, grid_parameter_fit = True, n_splits = N_SPLITS, random_state = RANDOM_STATE, test_size = TEST_SIZE, scoring = SCORING, shuffle = SHUFFLE, cv_type = "KFold", scale = False, scaler_type = "StandardScaler" ):
 
         if models == None:
             models = GET_ALLKINDS_MODELS(prediction_type = prediction_type)
@@ -416,9 +416,10 @@ class HYPER_PREDICTION(object):
 
         self.__prediction_type = prediction_type
 
-        for key in models:
-            if ( type(models[key]) in MODELS_CAN_BE_GRIDDED ) or ( ( type(models[key]) == pipeline.Pipeline ) and ( type(models[key].steps[-1][-1]) in MODELS_CAN_BE_GRIDDED ) ):
-                models[key] = MODEL_WITH_BESTPARA( model = models[key], param = BEST_PARA_SEARCH( model = models[key], param_grid = GET_GRID_PARA(model = models[key]), X_TRAIN = X_TRAIN, y_TRAIN = y_TRAIN, cv_type = cv_type, n_splits = n_splits, random_state = random_state, test_size = test_size, scoring = scoring, shuffle = shuffle ) )
+        if grid_parameter_fit:
+            for key in models:
+                if ( type(models[key]) in MODELS_CAN_BE_GRIDDED ) or ( ( type(models[key]) == pipeline.Pipeline ) and ( type(models[key].steps[-1][-1]) in MODELS_CAN_BE_GRIDDED ) ):
+                    models[key] = MODEL_WITH_BESTPARA( model = models[key], param = BEST_PARA_SEARCH( model = models[key], param_grid = GET_GRID_PARA(model = models[key]), X_TRAIN = X_TRAIN, y_TRAIN = y_TRAIN, cv_type = cv_type, n_splits = n_splits, random_state = random_state, test_size = test_size, scoring = scoring, shuffle = shuffle ) )
 
         self.__models = models
 
@@ -486,6 +487,7 @@ class HYPER_PREDICTION(object):
 
 iris_names = [ "sepal-length", "sepal-width", "petal-length", "petal-width" ]
 sonar_names = [ 'SONAR1', 'SONAR2', 'SONAR3', 'SONAR4', 'SONAR5', 'SONAR6', 'SONAR7', 'SONAR8', 'SONAR9', 'SONAR10', 'SONAR11', 'SONAR12', 'SONAR13', 'SONAR14', 'SONAR15', 'SONAR16', 'SONAR17', 'SONAR18', 'SONAR19', 'SONAR20', 'SONAR21', 'SONAR22', 'SONAR23', 'SONAR24', 'SONAR25', 'SONAR26', 'SONAR27', 'SONAR28', 'SONAR29', 'SONAR30', 'SONAR31', 'SONAR32', 'SONAR33', 'SONAR34', 'SONAR35', 'SONAR36', 'SONAR37', 'SONAR38', 'SONAR39', 'SONAR40', 'SONAR41', 'SONAR42', 'SONAR43', 'SONAR44', 'SONAR45', 'SONAR46', 'SONAR47', 'SONAR48', 'SONAR49', 'SONAR50', 'SONAR51', 'SONAR52', 'SONAR53', 'SONAR54', 'SONAR55', 'SONAR56', 'SONAR57', 'SONAR58', 'SONAR59', 'SONAR60', 'class' ]
+poker_names = [ "S1", "C1", "S2", "C2", "S3", "C3", "S4", "C4", "S5", "C5", "CLASS" ]
 
 """
 iris = pd.read_csv( "C:\\iris.csv", names = iris_names )
@@ -498,9 +500,9 @@ iris_prediction = HYPER_PREDICTION(
     y_TEST = yTest,
     scale = False
     )
-iris_prediction.DUMP_MODEL("C:\\1.sav")
 """
 
+"""
 sonar = pd.read_csv( "C:\\sonar.all-data.csv", names = sonar_names )
 XTrain, XTest, yTrain, yTest = SPLIT_DATA(sonar)
 sonar_prediction = HYPER_PREDICTION(
@@ -509,6 +511,24 @@ sonar_prediction = HYPER_PREDICTION(
     X_TEST = XTest,
     y_TRAIN = yTrain,
     y_TEST = yTest,
-    scale = True
+    scale = False
+    )
+"""
+
+Poker_Train = pd.read_csv( "C:\\poker-hand-testing.csv", names = poker_names )
+Poker_Test = pd.read_csv( "C:\\poker-hand-training-true.csv", names = poker_names )
+XTrain = Poker_Train.values[ : , : (-1) ]
+yTrain = Poker_Train.values[ : , (-1) ]
+XTest = Poker_Test.values[ : , : (-1) ]
+yTest = Poker_Test.values[ : , (-1) ]
+poker_prediction = HYPER_PREDICTION(
+    prediction_type = "C",
+    X_TRAIN = XTrain,
+    X_TEST = XTest,
+    y_TRAIN = yTrain,
+    y_TEST = yTest,
+    grid_parameter_fit = False,
+    scale = False
     )
 
+input()
