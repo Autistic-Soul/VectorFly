@@ -482,12 +482,103 @@ class HYPER_PREDICTION(object):
     def ALL_MODELS(self):
         return self.__models
 
+class DATA_CLEANING(object):
+
+    """
+    csv_path:
+    ===
+        <str>
+    names:
+    ===
+        <list>
+    losts:
+    ===
+        <list>
+    fill:
+    ===
+        <str>: "MEAN" or "MEDIAN" or "MODE"
+    """
+
+    def __init__( self, csv_path, names = None, losts = None, fill_type = "MEAN", test_size = TEST_SIZE, random_state = RANDOM_STATE ):
+
+        dataset = pd.read_csv(csv_path) if names == None else pd.read_csv(csv_path, names = names)
+        self.__data = dataset
+        self.__data = list(self.__data.values)
+
+        for i in range(len(self.__data[0])):
+
+            array = []
+            for j in range(len(self.__data)):
+                if not self.__data[j][i] in losts:
+                    array.append(self.__data[j][i])
+            
+            if fill_type == "MEAN":
+                sigma = 0
+                for i in range(len(array)):
+                    if not array[i] in losts:
+                        sigma += array[i]
+                filling = sigma / len(array)
+            elif fill_type == "MEDIAN":
+                array = array.sort()
+                filling = array[ len(array) // 2 ]
+            elif fill_type == "MODE":
+                array = array.sort()
+                filling = array[ len(array) // 2 ]
+            else:
+                raise Exception()
+
+            for j in range(len(self.__data)):
+                if self.__data[j][i] in losts:
+                    self.__data[j][i] = filling
+
+        col = dataset.columns
+        self.__data = pd.DataFrame(self.__data, columns = col)
+
+        self.X_Train, self.X_Test, self.y_Train, self.y_Test = SPLIT_DATA(self.__data, test_size, random_state)
+
+    def CLEANED_DATA(self):
+        return self.X_Train, self.X_Test, self.y_Train, self.y_Test
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 iris_names = [ "sepal-length", "sepal-width", "petal-length", "petal-width" ]
 sonar_names = [ 'SONAR1', 'SONAR2', 'SONAR3', 'SONAR4', 'SONAR5', 'SONAR6', 'SONAR7', 'SONAR8', 'SONAR9', 'SONAR10', 'SONAR11', 'SONAR12', 'SONAR13', 'SONAR14', 'SONAR15', 'SONAR16', 'SONAR17', 'SONAR18', 'SONAR19', 'SONAR20', 'SONAR21', 'SONAR22', 'SONAR23', 'SONAR24', 'SONAR25', 'SONAR26', 'SONAR27', 'SONAR28', 'SONAR29', 'SONAR30', 'SONAR31', 'SONAR32', 'SONAR33', 'SONAR34', 'SONAR35', 'SONAR36', 'SONAR37', 'SONAR38', 'SONAR39', 'SONAR40', 'SONAR41', 'SONAR42', 'SONAR43', 'SONAR44', 'SONAR45', 'SONAR46', 'SONAR47', 'SONAR48', 'SONAR49', 'SONAR50', 'SONAR51', 'SONAR52', 'SONAR53', 'SONAR54', 'SONAR55', 'SONAR56', 'SONAR57', 'SONAR58', 'SONAR59', 'SONAR60', 'class' ]
 poker_names = [ "S1", "C1", "S2", "C2", "S3", "C3", "S4", "C4", "S5", "C5", "CLASS" ]
+ttt_names = [ "top-left-square", "top-middle-square", "top-right-square", "middle-left-square", "middle-middle-square", "middle-right-square", "bottom-left-square", "bottom-middle-square", "bottom-right-square", "class" ]
 
 """
 iris = pd.read_csv( "C:\\iris.csv", names = iris_names )
@@ -515,6 +606,7 @@ sonar_prediction = HYPER_PREDICTION(
     )
 """
 
+"""
 Poker_Train = pd.read_csv( "C:\\poker-hand-testing.csv", names = poker_names )
 Poker_Test = pd.read_csv( "C:\\poker-hand-training-true.csv", names = poker_names )
 XTrain = Poker_Train.values[ : , : (-1) ]
@@ -522,6 +614,19 @@ yTrain = Poker_Train.values[ : , (-1) ]
 XTest = Poker_Test.values[ : , : (-1) ]
 yTest = Poker_Test.values[ : , (-1) ]
 poker_prediction = HYPER_PREDICTION(
+    prediction_type = "C",
+    X_TRAIN = XTrain,
+    X_TEST = XTest,
+    y_TRAIN = yTrain,
+    y_TEST = yTest,
+    grid_parameter_fit = False,
+    scale = False
+    )
+"""
+
+ttt = pd.read_csv( "C:\\tic-tac-toe.csv", names = ttt_names )
+XTrain, XTest, yTrain, yTest = SPLIT_DATA(ttt)
+ttt_prediction = HYPER_PREDICTION(
     prediction_type = "C",
     X_TRAIN = XTrain,
     X_TEST = XTest,
