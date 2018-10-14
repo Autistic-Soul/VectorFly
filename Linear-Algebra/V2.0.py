@@ -35,6 +35,42 @@ def isVec(_Array = [0]):
     return ( True, "" )
 
 
+def cofactor_matrix( _Array = [[0]], Ln_from_zero = None, Col_from_zero = None ):
+    _ARray = []
+    for i in range(len(_Array)):
+        _Vec = []
+        for j in range(len(_Array)):
+            _Vec.append(_Array[i][j])
+            if j == Col_from_zero:
+                _Vec.pop()
+        _ARray.append(_Vec)
+        if i == Ln_from_zero:
+            _ARray.pop()
+    return _ARray
+
+def cofactor( _Array = [[0]], Ln_from_zero = None, Col_from_zero = None ):
+    return list_determinant(cofactor_matrix( _Array = _Array, Ln_from_zero = Ln_from_zero, Col_from_zero = Col_from_zero ))
+
+
+def algebraric_cofactor( _Array = [[0]], Ln_from_zero = None, Col_from_zero = None ):
+    return ( cofactor( _Array = _Array, Ln_from_zero = Ln_from_zero, Col_from_zero = Col_from_zero ) * ( (-1) ** ( Ln_from_zero + Col_from_zero ) ) )
+
+
+def list_determinant(_Array = [[0]]):
+
+    if isMat(_Array) == False:
+        raise Exception()
+
+    elif len(_Array) != len(_Array[0]):
+        raise Exception()
+
+    if len(_Array) == 1 and len(_Array[0]) == 1:
+        return _Array[0][0]
+
+    else:
+        return sum([ _Array[i][0] * algebraric_cofactor( _Array = _Array, Ln_from_zero = i, Col_from_zero = 0 ) for i in range(len(_Array)) ])
+
+
 class _Matrix(object):
 
     def __init__(self, _Array = [[0]]):
@@ -70,6 +106,11 @@ class _Matrix(object):
 
     def DATA(self):
         return self.__data
+
+    def _Determinant(self):
+        return list_determinant(_Array = self.__data)
+    def det(self):
+        return self._Determinant()
 
     def _Transposition(self):
         _Array = [ [ self.__data[j][i] for j in range(self._Length()[0]) ] for i in range(self._Length()[1]) ]
@@ -172,16 +213,35 @@ def _Dot( _This, _That ):
     return sum([ ( _This[i] * _That[i] ) for i in range(len(_This)) ])
 
 
-a = [
+list_a = [
     [ 1, 2, 3 ],
     [ 4, 5, 6 ]
     ]
-a = _Matrix(a)
+a = _Matrix(list_a)
 
-b = [
+list_b = [
     [ 0, 1, 0, 0 ],
     [ 0, 0, 1, 0 ],
     [ 0, 0, 0, 1 ],
     [ 0, 0, 0, 0 ]
     ]
-b = _Matrix(b)
+b = _Matrix(list_b)
+
+mat1 = [
+    [ 1, 0, 0 ],
+    [ 0, 1, 0 ],
+    [ 0, 0, 1 ]
+    ]
+
+mat2 = [
+    [ 1, 0, 0 ],
+    [ 0, 2, 0 ],
+    [ 0, 0, 3 ]
+    ]
+
+mat3 = [
+    [ 1, 2, 3, 4 ],
+    [ 5, 6, 7, 8 ],
+    [ 9, 10, 11, 12 ],
+    [ 13, 14, 15, 16 ]
+    ]
