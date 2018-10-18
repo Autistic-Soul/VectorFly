@@ -10,7 +10,7 @@ TAB_STR = multispaces()
 LINE_BEGIN_STR = "|   "
 LINE_END_STR = "\n"
 
-X_TEST = [ 1, 1 ]
+X_TEST = [ 0, 0 ]
 
 """
     input_X     ||      output_y
@@ -118,8 +118,8 @@ class Layer(object):
     def __init__( self, Neural_Nodes = [ Neural() ] ):
         self.nodes = Neural_Nodes
 
-    def compute( self, X = [0], Activation_Function = None ):
-        return [ self.nodes[i].compute( X = X, Activation_Function = Activation_Function ) for i in range(len(self.nodes)) ]
+    def compute( self, X = [0], Activation_Function = None, Threshold = 0 ):
+        return [ self.nodes[i].compute( X = X, Activation_Function = Activation_Function, Threshold = Threshold ) for i in range(len(self.nodes)) ]
 
 # Net
 
@@ -128,10 +128,10 @@ class Net(object):
     def __init__( self, Layer_Nodes = [ Layer() ] ):
         self.nodes = Layer_Nodes
 
-    def compute( self, X = [0], Activation_Function = None ):
+    def compute( self, X = [0], Activation_Function = None, Threshold = 0 ):
         for i in range(len(self.nodes)):
             print( "X =", X )
-            X = self.nodes[i].compute( X = X, Activation_Function = Activation_Function )
+            X = self.nodes[i].compute( X = X, Activation_Function = Activation_Function, Threshold = Threshold )
         print( "y =", X )
         return X
 
@@ -151,10 +151,15 @@ net_1303 = Net(
     )
 net_1303.compute( X = X_TEST, Activation_Function = "RELU" )
 
-#2
+#2  #ERROR!
 net_1311 = Net(
     Layer_Nodes = [
-        Layer(),
-        Layer()
+        Layer(
+            Neural_Nodes = [ Neural( w = [ (-0.5), 1, (-1) ] ), Neural( w = [ (-0.5), (-1), 1 ] ) ]
+            ),
+        Layer(
+            Neural_Nodes = [ Neural( w = [ 0.5, 1, 1 ] ) ]
+            )
         ]
     )
+net_1311.compute( X = X_TEST, Activation_Function = "LINEAR_THRESHOLD" )
