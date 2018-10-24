@@ -184,7 +184,7 @@ def ALGO_CMP( models = None, X_TRAIN = None, y_TRAIN = None, prediction_type = N
     results = [ ( models[each_model], model_selection.cross_val_score( estimator = models[each_model], X = X_TRAIN, y = y_TRAIN, scoring = scoring, cv = cross_validator ) ) for each_model in models ]
 
     for each_result in results:
-        print( "Algorithm: %s,\nMEAN: %f, STD: %f" % ( type(each_result[0]), each_result[1].std(), each_result[1].mean() ) )
+        print( "Algorithm: %s,\nMEAN: %f, STD: %f" % ( type(each_result[0]), each_result[1].mean(), each_result[1].std() ) )
     plt.title("Algorithm_Comparison")
     plt.boxplot( x = [ each_result[1] for each_result in results ], labels = models.keys() )
     plt.show()
