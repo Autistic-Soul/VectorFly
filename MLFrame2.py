@@ -1,6 +1,8 @@
 #!/usr/bin/env Python
 # -*- coding: utf-8 -*-
 
+# A Framework for VectorFly to connect to scikit-learn more conveniently
+
 import numpy as np
 import scipy as sp
 import pandas as pd
