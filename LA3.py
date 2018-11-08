@@ -3,43 +3,22 @@
 
 ################################################################################################################################################################################################################################################
 """
-    Created On 2018.‎11‎.‎2, ‏‎12:36:48
+    Created On 2018.11.2, 12:36:48
     @author: sandyzikun
 """
 ################################################################################################################################################################################################################################################
 
 # -*- 导入类库 -*-
-import math
-import cmath
 try:
+    import math, cmath
+
     import numpy as np
-    from numpy import linalg as npla
-except ImportError as _:
-    print(_)
-except Exception as _:
-    print(_)
-try:
     import scipy as sp
-except ImportError as _:
-    print(_)
-except Exception as _:
-    print(_)
-try:
     import pandas as pd
-except ImportError as _:
-    print(_)
-except Exception as _:
-    print(_)
-
-# -*- 辅助函数 -*-
-
-def range_except(range_list, except_site):
-    _ = list(range_list)
-    _.pop(except_site)
-    return _
+except:
+    pass
 
 # -*- 判定函数 -*-
-
 def is_matrix(mat):
     if type(mat) != list or len(mat) == 0 or type(mat[0]) != list or len(mat[0]) == 0:
         return False
@@ -47,10 +26,8 @@ def is_matrix(mat):
         if type(mat[_]) != list or len(mat[_]) != len(mat[_ - 1]):
             return False
     return True
-
 def is_square_matrix(mat):
     return True if is_matrix(mat) and len(mat) == len(mat[0]) else False
-
 def is_L_matrix(mat):
     if not is_square_matrix(mat):
         return False
@@ -59,7 +36,6 @@ def is_L_matrix(mat):
             if mat[i][j] != 0:
                 return False
     return True
-
 def is_U_matrix(mat):
     if not is_square_matrix(mat):
         return False
@@ -68,14 +44,33 @@ def is_U_matrix(mat):
             if mat[i][j] != 0:
                 return False
     return True
-
 def same_size_matrix(this_matrix, that_matrix):
     if not ( is_matrix(this_matrix) and is_matrix(that_matrix) ):
         return False
     return True if len(this_matrix) == len(that_matrix) and len(this_matrix[0]) == len(that_matrix[0]) else False
 
-# -*- 奥义 * 四重递归 -*-
+# -*- 辅助函数 -*-
+def range_except(range_list, except_site):
+    _ = list(range_list)
+    _.pop(except_site)
+    return _
+def Hadamard_Multiply(this_matrix, that_matrix):
+    if not same_size_matrix(this_matrix, that_matrix):
+        raise Exception()
+    return [ [ ( this_matrix[i][j] * that_matrix[i][j] ) for j in range(len(this_matrix[0])) ] for i in range(len(this_matrix)) ]
+def get_part_matrix(origin_mat, start_point, get_size):
+    array = []
+    for i in range(start_point[0], start_point[0] + get_size[0]):
+        array.append([])
+        for j in range(start_point[1], start_point[1] + get_size[1]):
+            array[-1].append(origin_mat[i][j])
+    return array
+def max_2d(list2d):
+    if not is_matrix(list2d):
+        raise Exception()
+    return max([ max([ list2d[i][j] for j in range(len(list2d[0])) ]) for i in range(len(list2d)) ])
 
+# -*- 奥义 * 四重递归 -*-
 def cofactor_matrix(mat, MATxy):
     if not is_matrix(mat):
         raise Exception()
@@ -85,17 +80,14 @@ def cofactor_matrix(mat, MATxy):
         for j in range_except(range(len(mat[0])), MATxy[1]):
             _[-1].append(mat[i][j])
     return _
-
 def cofactor_value(mat, MATxy):
     if not is_square_matrix(mat):
         raise Exception()
     return determinant(cofactor_matrix(mat, MATxy))
-
 def alg_cofactor(mat, MATxy):
     if not is_square_matrix(mat):
         raise Exception()
     return cofactor_value(mat, MATxy) * ( (-1) ** sum(MATxy) )
-
 def determinant(mat):
     if not is_square_matrix(mat):
         raise Exception()
@@ -104,7 +96,6 @@ def determinant(mat):
     return sum([ ( mat[_][0] * alg_cofactor(mat, (_, 0)) ) for _ in range(len(mat)) ])
 
 # -*- 矩阵定义 -*-
-
 class matrix(object):
 
     def __init__(self, array = [[]]):
@@ -128,12 +119,12 @@ class matrix(object):
     def Elements(self):
         return self.__ARRAY
 
+    def len(self):
+        return len(self.__ARRAY), len(self.__ARRAY[0])
+
     # -*- 同型矩阵判定 -*-
     def same_matrix(self, other):
         return True if ( len(self.__ARRAY) == len(other.Elements()) and len(self.__ARRAY[0]) == len(other.Elements()[0]) ) else False
-
-    def len(self):
-        return len(self.__ARRAY), len(self.__ARRAY[0])
 
     # -*- 逐元素对应乘积(Hadamard) -*-
     def Hadamard(self, other):
@@ -284,7 +275,6 @@ def diag_matrix(diag_vector):
         for j in range(len(diag_vector)):
             array[-1].append(diag_vector[i] if i == j else 0)
     return matrix(array)
-
 # -*- 副对角矩阵 -*-
 def diag_matrix2(diag_vector):
     array = []
@@ -293,19 +283,15 @@ def diag_matrix2(diag_vector):
         for j in range(len(diag_vector)):
             array[-1].append(diag_vector[i] if i + j + 1 == len(diag_vector) else 0)
     return matrix(array)
-
 # -*- 标量矩阵/数量矩阵/纯量矩阵 -*-
 def scalar_matrix(scalar_value, step):
     return diag_matrix([scalar_value] * step)
-
 # -*- 副对角标量矩阵/数量矩阵/纯量矩阵 -*-
 def scalar_matrix2(scalar_value, step):
     return diag_matrix2([scalar_value] * step)
-
 # -*- 零矩阵 -*-
 def O(step):
     return matrix([ [ 0 for j in range(step) ] for i in range(step) ])
-
 # -*- 单位矩阵 -*-
 def E(step):
     return scalar_matrix(1, step)
@@ -315,7 +301,6 @@ def eye(step):
     return scalar_matrix(1, step)
 def identity_matrix(step):
     return scalar_matrix(1, step)
-
 # -*- 副对角单位矩阵 -*-
 def E2(step):
     return scalar_matrix2(1, step)
@@ -325,35 +310,25 @@ def eye2(step):
     return scalar_matrix2(1, step)
 def identity_matrix2(step):
     return scalar_matrix2(1, step)
-
 # -*- 行矩阵/行矢量/行向量 -*-
 def Ln_Vector(vector_value):
     return matrix([vector_value])
-
 # -*- 列矩阵/列矢量/列向量 -*-
 def Col_Vector(vector_value):
     return matrix([ [vector_value[_]] for _ in range(len(vector_value)) ])
-
 # -*- 定义初等矩阵 -*-
-
 def Ln_Swap_Matrix(step, Site_A, Site_B):
     return eye(step).Ln_Swap(Site_A, Site_B)
-
 def Col_Swap_Matrix(step, Site_A, Site_B):
     return eye(step).Col_Swap(Site_A, Site_B)
-
 def Ln_Mul_Matrix(step, Site, k):
     return eye(step).Ln_Mul(Site, k)
-
 def Col_Mul_Matrix(step, Site, k):
     return eye(step).Col_Mul(Site, k)
-
 def Ln_Add_Matrix(step, Site_B, Site_A, k):
     return eye(step).Ln_Add(Site_B, Site_A, k)
-
 def Col_Add_Matrix(step, Site_B, Site_A, k):
     return eye(step).Col_Add(Site_B, Site_A, k)
-
 # -*- 下三角方程组求解 -*-
 def solve_L(L, b):
     A = L.Elements() if type(L) == matrix else L
@@ -367,7 +342,6 @@ def solve_L(L, b):
         for j in range(i + 1, len(A)):
             ans[j] -= ans[i] * A[j][i]
     return ans
-
 # -*- 上三角方程组求解 -*-
 def solve_U(U, b):
     A = U.Elements() if type(U) == matrix else U
@@ -382,43 +356,31 @@ def solve_U(U, b):
             ans[j] -= ans[i] * A[j][i]
     return ans
 
-# -*- 矩阵卷积运算 -*-
-def convolution(convolved_matrix, kernel_matrix, stride = 1, padding = None):
-    if padding != None:
-        raise Exception("Sorry, We Can\'t Pad Elements Yet!")
+# -*- 卷积算子定义 -*-
 
-# -*- TESTING PART -*-
-testing_matrix_201811031022 = [
-    [ 1, 2, 3 ],
-    [ 4, 5, 6 ],
-    [ 7, 8, 9 ]
-    ]
-testing_matrix_201811031136 = [
-    [ 1, 2 ],
-    [ 3, 4 ]
-    ]
-testing_matrix_201811051304 = [
-    [ 1, 2 ],
-    [ 3, 4 ]
-    ]
-testing_matrix_201811061611 = [
-    [ 1, 0, 0, 0 ],
-    [ 2, 1, 0, 0 ],
-    [ 3, 2, 1, 0 ],
-    [ 4, 3, 2, 1 ]
-    ]
-testing_matrix_201811061613 = [
-    [ 1, 2, 3, 4 ],
-    [ 0, 1, 2, 3 ],
-    [ 0, 0, 1, 2 ],
-    [ 0, 0, 0, 1 ]
-    ]
-mat1 = [
-    [ 1, 2 ],
-    [ 3, 4 ]
-    ]
-mat2 = [
-    [ 1, 2 ],
-    [ 3, 4 ]
-    ]
+# -*- 池化算子定义 -*-
+def max_pooling(pooling_matrix, stride, pooling_type = "MAX"):
+    pooling_mat = pooling_matrix.Elements() if type(pooling_matrix) == matrix else pooling_matrix
+    mat_size = len(pooling_mat), len(pooling_mat[0])
+    #print(mat_size)
+    #print(stride)
+    if mat_size[0] % stride[0] != 0 or mat_size[1] % stride[1] != 0:
+        raise Exception()
+    array = []
+    for i in range(0, mat_size[0] - stride[0] + 1, stride[0]):
+        array.append([])
+        for j in range(0, mat_size[1] - stride[1] + 1, stride[1]):
+            array[-1].append(max_2d(get_part_matrix(pooling_mat, (i, j), stride)))
+            #print(max_2d(get_part_matrix(pooling_mat, (i, j), stride)))
+            #array[-1].append(get_part_matrix(pooling_mat, (i, j), stride))
+            #print(get_part_matrix(pooling_mat, (i, j), stride))
+            #array[-1].append(pooling_mat[i][j])
+            #print("mat[%d][%d]: %s" % (i, j, pooling_mat[i][j]))
+    return array
+
+# -*- 测试区域(Testing Part)-*-
+# Preparing:
+#testing_pooled_mat = [ [ 1, 0, 1, 0 ], [ 0, 0, 0, 0 ], [ 1, 0, 1, 0 ], [ 0, 0, 0, 0 ] ]
+testing_pooled_mat = [ [ 1, 2, 3, 4 ], [ 5, 6, 7, 8 ], [ 9, 10, 11, 12 ], [ 13, 14, 15, 16 ] ]
+print(max_pooling(testing_pooled_mat, (2, 2)))
 ################################################################################################################################################################################################################################################
