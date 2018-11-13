@@ -3,7 +3,7 @@
 
 ################################################################################################################################################################################################################################################
 """
-    Created On 2018.‎11‎.‎2, ‏‎12:36:48
+    Created On 2018.11.2, 12:36:48
     @author: sandyzikun
 """
 ################################################################################################################################################################################################################################################
@@ -53,6 +53,18 @@ def same_size_matrix(this_matrix, that_matrix):
     if not ( is_matrix(this_matrix) and is_matrix(that_matrix) ):
         return False
     return True if len(this_matrix) == len(that_matrix) and len(this_matrix[0]) == len(that_matrix[0]) else False
+
+def is_vector(vec):
+    if not is_matrix(vec):
+        return vec, False, None
+    elif len(vec) == 1 and len(vec[0]) == 1:
+        return vec[0][0], True, "Scaler"
+    elif len(vec) == 1 and len(vec[0]) != 1:
+        return vec[0], True, "Ln"
+    elif len(vec) != 1 and len(vec[0]) == 1:
+        return [vec[_][0] for _ in range(len(vec))], True, "Col"
+    else:
+        return vec, False, None
 
 # -*- 辅助函数 -*-
 
@@ -131,6 +143,16 @@ def determinant(mat):
         raise Exception()
     elif len(mat) == 1:
         return mat[0][0]
+    elif len(mat) == 2:
+        return mat[0][0] * mat[1][1] \
+             - mat[1][0] * mat[0][1]
+    elif len(mat) == 3:
+        return mat[0][0] * mat[1][1] * mat[2][2] \
+             + mat[0][1] * mat[1][2] * mat[2][0] \
+             + mat[0][2] * mat[1][0] * mat[2][1] \
+             - mat[0][2] * mat[1][1] * mat[2][0] \
+             - mat[0][1] * mat[1][0] * mat[2][2] \
+             - mat[0][0] * mat[1][2] * mat[2][1]
     return sum([ ( mat[_][0] * alg_cofactor(mat, (_, 0)) ) for _ in range(len(mat)) ])
 
 # -*- 矩阵定义 -*-
@@ -227,6 +249,13 @@ class matrix(object):
     def TR(self):
         return self.Trace()
 
+    # -*- 求解伴随矩阵 -*-
+    def Adjugate(self):
+        if self.DET() == 0:
+            raise Exception("The Matrix You Just Input Can Not Be Inversed!")
+        mat_array = self.Elements()
+        return matrix([ [ cofactor_value(mat_array, (i, j)) for j in range(len(self.__ARRAY[0])) ] for i in range(len(self.__ARRAY)) ])
+
     # -*- 定义转置 -*-
     def Transposition(self):
         return matrix([ [ self.__ARRAY[j][i] for j in range(len(self.__ARRAY)) ] for i in range(len(self.__ARRAY[0])) ])
@@ -296,7 +325,7 @@ class matrix(object):
             array[_][Site_B] += array[_][Site_A] * k
         return matrix(array)
 
-    # -*- 返回矢量数组 -*-
+    # -*- 返回矢量数组/向量数组 -*-
     def vector_array(self):
         array = self.Elements()
         if len(array) == 1:
@@ -305,6 +334,29 @@ class matrix(object):
             return [ array[_][0] for _ in range(len(array)) ]
         else:
             raise Exception()
+
+# -*- 定义矢量广播/向量广播 -*-
+def broadcast(broadcasting_vector, broadcasted_matrix):
+    vec = broadcasting_vector.vector_array() if type(broadcasting_vector) == matrix else broadcasting_vector
+    vec, _, vec_type = is_vector(vec)
+    mat = broadcasted_matrix.Elements() if type(broadcasted_matrix) == matrix else broadcasted_matrix
+    if vec_type == "Scaler":
+        if 1 in [ len(mat), len(mat[0]) ]:
+            return [ [ mat[i][j] * vec for j in range(len(mat[0])) ] for i in range(len(mat)) ]
+        else:
+            raise Exception()
+    elif vec_type == "Ln":
+        if len(vec) == len(mat[0]):
+            return [ [ (mat[i][j] * vec[j]) for j in range(len(mat[0])) ] for i in range(len(mat)) ]
+        else:
+            raise Exception()
+    elif vec_type == "Col":
+        if len(vec) == len(mat):
+            return [ [ (mat[i][j] * vec[i]) for j in range(len(mat[0])) ] for i in range(len(mat)) ]
+        else:
+            raise Exception()
+    else:
+        raise Exception()
 
 # -*- 对角矩阵 -*-
 def diag_matrix(diag_vector):
@@ -459,6 +511,7 @@ testing_pooled_mat1 = [ [ 1, 0, 1, 0 ], [ 0, 0, 0, 0 ], [ 1, 0, 1, 0 ], [ 0, 0, 
 testing_pooled_mat2 = [ [ 1, 2, 3, 4 ], [ 5, 6, 7, 8 ], [ 9, 10, 11, 12 ], [ 13, 14, 15, 16 ] ]
 testing_kernel_mat3 = [ [ 1, 2 ], [ 3, 4 ] ]
 testing_convolved_mat4 = [ [ 1, 0, 1, 0 ], [ 0, 0, 0, 0 ], [ 1, 0, 1, 0 ], [ 0, 0, 0, 0 ] ]
+testing_determinant_mat5 = [ [ 246, 427, 327 ], [ 1014, 543, 443 ], [ -342, 721, 621 ] ]
 print(pooling(testing_pooled_mat1, (2, 2), "MAX"))
 print(pooling(testing_pooled_mat1, (2, 2), "MAX_ABS"))
 print(pooling(testing_pooled_mat1, (2, 2), "MEAN"))
@@ -470,4 +523,5 @@ print(pooling(testing_pooled_mat2, (2, 2), "MEAN"))
 print(pooling(testing_pooled_mat2, (2, 2), "SUM_ABS"))
 print(pooling(testing_pooled_mat2, (2, 2), "FROBENIUS"))
 print(convolution(testing_convolved_mat4, testing_kernel_mat3))
+print(matrix(testing_pooled_mat1).Adjugate())
 ################################################################################################################################################################################################################################################
