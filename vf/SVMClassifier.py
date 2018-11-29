@@ -4,7 +4,7 @@
 import numpy as np
 import scipy as sp
 
-from sklearn.svm import SVC
+# from sklearn.svm import SVC
 
 # 线性核函数
 def linear_kernel(a, b):
