@@ -4,7 +4,7 @@
 import numpy as np
 import scipy as sp
 
-# from sklearn.svm import SVC
+from sklearn.svm import SVC
 
 # 线性核函数
 def linear_kernel(a, b):
@@ -86,6 +86,24 @@ class SVMClassifier(object):
             for j in range(self.M):
                 self.XPairs_distanced.append((self.distance_mat[i][j], (i, j)))
         self.XPairs_distanced.sort(reverse = True)
+
+        # 去重
+        tmp_flag_lst = [ True for _ in range(self.M) ]                  # 标记列表, 用于记录一个点是否可以处理
+        tmp_deleting_site_set = []                                      # 用于记录将被删除的下标的集合
+        for _1 in range(len(self.XPairs_distanced)):                    # 接下来便是神乎其技的暴力搜索
+            if tmp_flag_lst[self.XPairs_distanced[_1][1][0]]:
+                for _2 in range(_1, len(self.XPairs_distanced)):
+                    if self.XPairs_distanced[_1][1][0] in self.XPairs_distanced[_2][1]:
+                        tmp_deleting_site_set.append(_2)
+            if tmp_flag_lst[self.XPairs_distanced[_1][1][1]]:
+                for _2 in range(_1, len(self.XPairs_distanced)):
+                    if self.XPairs_distanced[_1][1][1] in self.XPairs_distanced[_2][1]:
+                        tmp_deleting_site_set.append(_2)
+            tmp_flag_lst[self.XPairs_distanced[_1][1][0]] = False
+        tmp_deleting_site_set = list(set(tmp_deleting_site_set))
+        tmp_deleting_site_set.reverse()
+        for _ in tmp_deleting_site_set:
+            self.XPairs_distanced.pop(_)                                # 按照下标集合删除相应元素
 
         # 汇总所有支持矢量/支持向量
         for _ in range(self.M):
