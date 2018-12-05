@@ -5,6 +5,9 @@ import numpy as np
 import scipy as sp
 
 M_MAX_ITERATION_TIMES = 1000
+DEFAULT_MAX_STEP = 0.
+DEFAULT_SECOND_ALPHA = 0.
+DEFAULT_SECOND_ERROR = 0.
 
 def vector_distance2(a, b):
     return np.linalg.norm(a - b) ** 2
@@ -44,15 +47,15 @@ class SVMClassifier:
 
     # Computing Error
     # 计算误差
-    def __compute_error(self, alpha_site):
-        pred = np.mat(self.alphas * self.y) * self.Kernel_Matrix[ : , alpha_site ] + self.Bias
-        return np.float64( pred - self.y[alpha_site] )
+    def __compute_error(self, alpha1st):
+        pred = np.mat(self.alphas * self.y) * self.Kernel_Matrix[ : , alpha1st ] + self.Bias
+        return np.float64( pred - self.y[alpha1st] )
 
     # Updating Error
     # 更新误差
-    def __update_error(self, alpha_site):
-        self.Error_Array[alpha_site][0] = 1
-        self.Error_Array[alpha_site][1] = self.__compute_error(alpha_site)
+    def __update_error(self, alpha1st):
+        self.Error_Array[alpha1st][0] = 1
+        self.Error_Array[alpha1st][1] = self.__compute_error(alpha1st)
         return
 
     # Undating All Error
@@ -64,11 +67,37 @@ class SVMClassifier:
 
     # Selecting the Second Alpha
     # 挑选第二个拉格朗日乘子分量
-    def __select_second_alpha(self, alpha_site, alpha_error):
-        return
+    def __inner_loop(self, alpha1st, error1st):
+
+        # 标记为该拉格朗日乘子分量已经被优化过
+        self.Error_Array[alpha1st][0] = 1
+        self.Error_Array[alpha1st][1] = error1st
+        candidate_alphas = np.nonzero(self.Error_Array[ : , 0 ].A)[0]
+
+        max_step = DEFAULT_MAX_STEP
+        alpha2nd = DEFAULT_SECOND_ALPHA
+        error2nd = DEFAULT_SECOND_ERROR
+
+        if len(candidate_alphas) > 1:
+            for alpha3rd in candidate_alphas:
+                if alpha3rd == alpha1st:
+                    continue
+                error3rd = self.__compute_error(alpha3rd)
+                if np.abs(error3rd - error1st) > max_step:
+                    max_step = np.abs(error3rd - error1st)
+                    alpha2nd, error2nd = alpha3rd, error3rd
+
+        # 随机选择
+        else:
+            alpha2nd = alpha1st
+            while alpha2nd == alpha1st:
+                alpha2nd = np.random.randint(self.M)
+            error2nd = self.__compute_error(alpha2nd)
+
+        return alpha2nd, error2nd
 
     # SMO核心部分
-    def __choose_update(self, alpha_site):
+    def __choose_update(self, alpha1st):
         return
 
     def train(self, X, y, m_max_iter = M_MAX_ITERATION_TIMES, print_details = True):
