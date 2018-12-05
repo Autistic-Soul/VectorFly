@@ -32,7 +32,6 @@ class SVMClassifier:
     # Initializing before Training
     # 训练预处理
     def __fit(self, X, y):
-
         self.X = np.array(X)
         self.y = np.array(y)
         self.M = len(X)
@@ -42,7 +41,6 @@ class SVMClassifier:
         self.Error_Array = np.mat(np.zeros([ self.M, 2 ]))                                                                              # Preparing Error-Matrix
         self.Bias = 0.                                                                                                                  # Preparing Bias
         self.trainable = True
-
         return
 
     # Computing Error
@@ -98,13 +96,28 @@ class SVMClassifier:
 
     # SMO核心部分
     def __choose_update(self, alpha1st):
-        return
+
+        error1st = self.__compute_error(alpha1st)
+
+        # 判断选择出的第一个变量是否违背了KKT条件
+        if ( self.y[alpha1st] * error1st < -self.tol and self.alphas[alpha1st] < self.C ) or ( self.y[alpha1st] * error1st > self.tol and self.alphas[alpha1st] > 0 ):
+
+            # 1. 选择第二个分量
+            alpha2nd, error2nd = self.__inner_loop(alpha1st, error1st)
+            alpha1st_old = self.alphas[alpha1st].copy()
+            alpha2nd_old = self.alphas[alpha2nd].copy()
+
+            # 2. 计算上下界
+            L = np.max([ 0, self.alphas[alpha2nd] - self.alphas[alpha1st] if self.y[alpha1st] != self.y[alpha2nd] else self.alphas[alpha1st] + self.alphas[alpha2nd] - self.C ])        # 下界
+            H = np.min([ self.C, self.alphas[alpha2nd] - self.alphas[alpha1st] + self.C if self.y[alpha1st] != self.y[alpha2nd] else self.alphas[alpha2nd] - self.alphas[alpha1st] ])   # 上界
+
 
     def train(self, X, y, m_max_iter = M_MAX_ITERATION_TIMES, print_details = True):
 
+        # -*- Initializing(初始化) -*-
         self.__fit(X, y)
 
-        # -*- Training -*-
+        # -*- Training(训练开始) -*-
         if self.trainable:
 
             to_entire_set = True
