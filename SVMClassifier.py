@@ -110,7 +110,50 @@ class SVMClassifier:
             # 2. 计算上下界
             L = np.max([ 0, self.alphas[alpha2nd] - self.alphas[alpha1st] if self.y[alpha1st] != self.y[alpha2nd] else self.alphas[alpha1st] + self.alphas[alpha2nd] - self.C ])        # 下界
             H = np.min([ self.C, self.alphas[alpha2nd] - self.alphas[alpha1st] + self.C if self.y[alpha1st] != self.y[alpha2nd] else self.alphas[alpha2nd] - self.alphas[alpha1st] ])   # 上界
+            if L == H:
+                return 0
 
+            # 3. 计算学习率(Learning Rate)
+            learning_rate = (-1.) * ( self.Kernel_Matrix[alpha1st, alpha1st] - self.Kernel_Matrix[alpha1st, alpha2nd] - self.Kernel_Matrix[alpha2nd, alpha1st] + self.Kernel_Matrix[alpha2nd, alpha2nd] )
+
+            # 4. 更新 alpha2nd
+            self.alphas[alpha2nd] -= self.y[alpha2nd] * (error1st - error2nd) / learning_rate
+
+            # 5. 确定最终的 alpha2nd
+            self.alphas[alpha2nd] = np.min([ self.alphas[alpha2nd], H ])
+            self.alphas[alpha2nd] = np.max([ self.alphas[alpha2nd], L ])
+
+            # 6. 判断是否结束
+            if np.abs(alpha2nd_old - self.alphas[alpha2nd]) < self.tol:
+                self.__update_error(alpha2nd)
+                return 0
+
+            # 7. 更新 alpha1st
+            self.alphas[alpha1st] += self.y[alpha1st] * self.y[alpha2nd] * (alpha2nd_old-self.alphas[alpha2nd])
+
+            # 8. 更新 bias
+            bias1 = self.Bias - error1st \
+                  - self.y[alpha1st] * (self.alphas[alpha1st]-alpha1st_old) * self.Kernel_Matrix[alpha1st, alpha1st] \
+                  - self.y[alpha2nd] * (self.alphas[alpha2nd]-alpha2nd_old) * self.Kernel_Matrix[alpha1st, alpha2nd]
+            bias2 = self.Bias - error2nd \
+                  - self.y[alpha1st] * (self.alphas[alpha1st]-alpha1st_old) * self.Kernel_Matrix[alpha2nd, alpha1st] \
+                  - self.y[alpha2nd] * (self.alphas[alpha2nd]-alpha2nd_old) * self.Kernel_Matrix[alpha2nd, alpha2nd]
+            if 0 < self.alphas[alpha1st] < self.C:
+                self.Bias = bias1
+            elif 0 < self.alphas[alpha2nd] <self.C:
+                self.Bias = bias2
+            else:
+                self.Bias = .5 * (bias1 + bias2)
+
+            # 9. 更新 error
+            self.__update_error(alpha1st)
+            self.__update_error(alpha2nd)
+
+            return 1
+
+        # 如果选择出的第一个变量没有违背了KKT条件, 直接退出函数
+        else:
+            return 0
 
     def train(self, X, y, m_max_iter = M_MAX_ITERATION_TIMES, print_details = True):
 
