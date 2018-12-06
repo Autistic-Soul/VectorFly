@@ -184,7 +184,7 @@ class SVMClassifier:
                     # 对支持矢量/支持向量
                     sv_sites = []
                     for _ in range(self.M):
-                        if self.alphas[_] > 0 and self.alphas[_] < C:
+                        if self.alphas[_] > 0 and self.alphas[_] < self.C:
                             sv_sites.append(_)
 
                     for _ in sv_sites:
