@@ -14,6 +14,8 @@
 
 (我想我们有权力感谢任何为我们带来力量的事物, 即使它不被某些人们接受)
 
-![image](https://magicalmirai.com/2015/images/mainv.jpg)
-
 ![image](https://imgsa.baidu.com/forum/w%3D580/sign=cd88162519ce36d3a20483380af23a24/4b7d6c09c93d70cfadfa40f2f4dcd100bba12b94.jpg)
+
+![image](https://imgsa.baidu.com/forum/w%3D580/sign=c5b252df0de9390156028d364bed54f9/9f5b9c2bd40735fa5fa6a44692510fb30e2408ba.jpg)
+
+![image](https://magicalmirai.com/2015/images/mainv.jpg)
