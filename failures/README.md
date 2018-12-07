@@ -43,3 +43,5 @@
 (我想我们有权力感谢任何为我们带来力量的事物, 即使它不被某些人们接受)
 
 ![image](https://magicalmirai.com/2015/images/mainv.jpg)
+
+![image](https://imgsa.baidu.com/forum/w%3D580/sign=cd88162519ce36d3a20483380af23a24/4b7d6c09c93d70cfadfa40f2f4dcd100bba12b94.jpg)
