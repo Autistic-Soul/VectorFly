@@ -2,6 +2,16 @@
 
 # 请不要随意查看!
 
+# ======================================== 分割线 ========================================
+
+主页: https://github.com/sandyzikun/
+
+VectorFly主页: https://github.com/sandyzikun/VectorFly/
+
+支持矢量机实现样例: https://github.com/sandyzikun/VectorFly/blob/master/SVMClassifier.py/
+
+# ======================================== 分割线 ========================================
+
 这个文件夹里面的都是我的失败作,
 
 在所有我受挫, 失败, 灰心, 面临绝望的瞬间,
