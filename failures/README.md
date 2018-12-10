@@ -10,6 +10,8 @@ VectorFly主页: https://github.com/sandyzikun/VectorFly/
 
 支持矢量机实现样例: https://github.com/sandyzikun/VectorFly/blob/master/SVMClassifier.py/
 
+自动编码机实现样例：https://github.com/sandyzikun/VectorFly/blob/master/AutoEncoder.py/
+
 # ===== 分割线 =====
 
 这个文件夹里面的都是我的失败作,
