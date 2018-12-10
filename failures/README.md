@@ -2,8 +2,6 @@
 
 # 请不要随意查看!
 
-# ===== 分割线 =====
-
 主页: https://github.com/sandyzikun/
 
 VectorFly主页: https://github.com/sandyzikun/VectorFly/
